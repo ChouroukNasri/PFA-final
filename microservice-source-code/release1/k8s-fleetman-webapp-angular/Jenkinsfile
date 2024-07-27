@@ -1,0 +1,81 @@
+pipeline {
+
+    agent any
+ 
+    stages {
+
+        stage('Build') {
+
+            steps {
+
+                script {
+
+                    // Build the application
+
+                    sh 'mvn clean package'
+
+                }
+
+            }
+
+        }
+
+        stage('Docker Build') {
+
+            steps {
+
+                script {
+
+                    // Build Docker image
+
+                    sh 'docker build -t positionsimulator .'
+
+                }
+
+            }
+
+        }
+
+        stage('Code Quality') {
+
+            steps {
+
+                script {
+
+                    // Run SonarQube analysis
+
+                    sh 'mvn sonar:sonar -Dsonar.projectKey=your_project_key -Dsonar.host.url=http://localhost:9000 -Dsonar.login=your_sonarqube_token'
+
+                }
+
+            }
+
+        }
+
+        stage('Deploy') {
+
+            steps {
+
+                script {
+
+                    // Deploy to Kubernetes
+
+                    echo 'Deploying to Kubernetes'
+
+                    sh "sed -i 's/image: positionsimulator:.*/image: positionsimulator:${env.BUILD_NUMBER}/g' k8s/position-tracker-deployment.yaml"
+
+                    sh "kubectl apply -f k8s/position-tracker-deployment.yaml"
+
+                    sh "kubectl get all"
+
+                    echo 'Deployment complete'
+
+                }
+
+            }
+
+        }
+
+    }
+
+}
